@@ -27,7 +27,7 @@ document.getElementById('clear').addEventListener('click', drawPlane)
 function graph(){
     let equation = document.getElementById('equation').value
     //make x values left of center negative, scale plane by factor of 1/50 so the width should be 20 units
-    for (let x = -center.x/50; x <=center.x/50; x+=0.001){
+    for (let x = -center.x/50; x <=center.x/50; x+=0.01){
         let valueArray = equation.split(' ')
         let stringX = String(x)
         for (let i =0; i < valueArray.length; i ++) {
@@ -35,75 +35,7 @@ function graph(){
                 valueArray[i] = valueArray[i].replaceAll('x', stringX)
             }
         }
-        for (let i =0; i < valueArray.length; i ++) {
-            if (valueArray[i].startsWith('sin')) {
-                if (valueArray[i].includes('(')) {
-                    valueArray[i] = valueArray[i].replace('sin(',"")
-                    calc(i,valueArray)
-                    
-                    valueArray[i] = String(Math.sin(Number(valueArray[i])))
-                } else {
-                    valueArray[i] = valueArray[i].replaceAll('sin', '')
-                    valueArray[i] = String(Math.sin(Number(valueArray[i])))
-                }
-            } else if(valueArray[i].startsWith('cos')){
-                if (valueArray[i].includes('(')) {
-                    valueArray[i] = valueArray[i].replace('cos(',"")
-                    calc(i,valueArray)
-                    
-                    valueArray[i] = String(Math.cos(Number(valueArray[i])))
-                } else {
-                    valueArray[i] = valueArray[i].replaceAll('cos', '')
-                    valueArray[i] = String(Math.cos(Number(valueArray[i])))
-                }
-            } else if(valueArray[i].startsWith('tan')){
-                if (valueArray[i].includes('(')) {
-                    valueArray[i] = valueArray[i].replace('tan(',"")
-                    calc(i,valueArray)
-                    
-                    valueArray[i] = String(Math.tan(Number(valueArray[i])))
-                } else {
-                    valueArray[i] = valueArray[i].replaceAll('tan', '')
-                    valueArray[i] = String(Math.tan(Number(valueArray[i])))
-                }
-            }
-        }
-        for (let i =0; i < valueArray.length; i ++) {
-            if (valueArray[i].startsWith('(')) {
-                valueArray[i] = valueArray[i].replace('(', "")
-                calc(i ,valueArray)
-            }
-        }
-        for (let i =0; i < valueArray.length; i ++) {
-            if (valueArray[i] == '^'){
-                valueArray[i-1] = String(Number(valueArray[i-1]) ** Number(valueArray[i+1]))
-                valueArray.splice(i,2)
-                i -=2
-            }
-        }
-        for (let i =0; i < valueArray.length; i ++) {
-            if (valueArray[i] == '*'){
-                valueArray[i-1] = String(Number(valueArray[i-1]) * Number(valueArray[i+1]))
-                valueArray.splice(i,2)
-                i -=2
-            }else if (valueArray[i] == '/'){
-                valueArray[i-1] = String(Number(valueArray[i-1])/Number(valueArray[i+1]))
-                valueArray.splice(i,2)
-                i -=2
-            }
-        }
-        for (let i =0; i < valueArray.length; i ++) {
-            if (valueArray[i] == '+'){
-                valueArray[i-1] = String(Number(valueArray[i-1]) + Number(valueArray[i+1]))
-                valueArray.splice(i,2)
-                i -=2
-            }else if (valueArray[i] == '-'){
-                valueArray[i-1] = String(Number(valueArray[i-1]) - Number(valueArray[i+1]))
-                valueArray.splice(i,2)
-                i -=2
-            }
-        }
-        
+        calc(0,valueArray)
         let y = Number(valueArray[0])
         //convert scaled x values into suitable values for canvas, shift 500 right, to center, shift y down 500, to center and move up when y increases like a normal person would
         circle(x * 50 + 500,500-50 * y,2,'fill')
@@ -114,41 +46,45 @@ function calc(start,valueArray){
     let endBrackets = ''
     let max = valueArray.length
     for (let i =start; i < max; i ++) {
-        if (valueArray[i].startsWith('sin')) {
-            if (valueArray[i].includes('(')) {
-                valueArray[i] = valueArray[i].replace('sin(',"")
-                endBrackets = calc(i,valueArray)
-                max = valueArray.length
-                valueArray[i] = String(Math.sin(Number(valueArray[i])))
-                valueArray[i] += endBrackets
-            } else {
-                valueArray[i] = valueArray[i].replaceAll('sin', '')
-                valueArray[i] = String(Math.sin(Number(valueArray[i])))
+        if (valueArray[i].startsWith('sin(')) {
+            valueArray[i] = valueArray[i].replace('sin(',"")
+            endBrackets = calc(i,valueArray)
+            max = valueArray.length
+            valueArray[i] = String(Math.sin(Number(valueArray[i])))
+            valueArray[i] += endBrackets
+        } else if (valueArray[i].startsWith('sin')){
+            valueArray[i] = valueArray[i].replace('sin', '')
+            if (valueArray[i].endsWith(')')){
+                endBrackets = checkEnd(valueArray,i) 
             }
-        } else if(valueArray[i].startsWith('cos')){
-            if (valueArray[i].includes('(')) {
-                valueArray[i] = valueArray[i].replace('cos(',"")
-
-                endBrackets = calc(i,valueArray)
-                max = valueArray.length
-                valueArray[i] += endBrackets
-                valueArray[i] = String(Math.cos(Number(valueArray[i])))
-            } else {
-                valueArray[i] = valueArray[i].replaceAll('cos', '')
-                valueArray[i] = String(Math.cos(Number(valueArray[i])))
+            valueArray[i] = String(Math.sin(Number(valueArray[i])))
+            return endBrackets
+        } else if(valueArray[i].startsWith('cos(')){
+            valueArray[i] = valueArray[i].replace('cos(',"")
+            endBrackets = calc(i,valueArray)
+            max = valueArray.length
+            valueArray[i] = String(Math.cos(Number(valueArray[i])))
+            valueArray[i] += endBrackets
+        } else if (valueArray[i].startsWith('cos')){
+            valueArray[i] = valueArray[i].replace('cos', '')
+            if (valueArray[i].endsWith(')')){
+                endBrackets = checkEnd(valueArray,i) 
             }
-        } else if(valueArray[i].startsWith('tan')){
-            if (valueArray[i].includes('(')) {
-                valueArray[i] = valueArray[i].replace('tan(',"")
-
-                endBrackets = calc(i,valueArray)
-                max = valueArray.length
-                valueArray[i] += endBrackets
-                valueArray[i] = String(Math.tan(Number(valueArray[i])))
-            } else {
-                valueArray[i] = valueArray[i].replaceAll('tan', '')
-                valueArray[i] = String(Math.tan(Number(valueArray[i])))
+            valueArray[i] = String(Math.cos(Number(valueArray[i])))
+            return endBrackets
+        } else if(valueArray[i].startsWith('tan(')){
+            valueArray[i] = valueArray[i].replace('tan(',"")
+            endBrackets = calc(i,valueArray)
+            max = valueArray.length
+            valueArray[i] = String(Math.tan(Number(valueArray[i])))
+            valueArray[i] += endBrackets
+        } else if (valueArray[i].startsWith('tan')){
+            valueArray[i] = valueArray[i].replace('tan', '')
+            if (valueArray[i].endsWith(')')){
+                endBrackets = checkEnd(valueArray,i) 
             }
+            valueArray[i] = String(Math.tan(Number(valueArray[i])))
+            return endBrackets
         }
     }
     for (let i =start; i < max; i ++) {
@@ -160,12 +96,7 @@ function calc(start,valueArray){
         //find the end bracket, that wll be the end for this calc function
         }
         if (valueArray[i].endsWith(')')){
-            valueArray[i] = valueArray[i].replace(')', ',')
-            valueArray[i]= valueArray[i].split(",")
-
-            //we will add extra end brackets after doing the calculations for this function run
-            endBrackets = valueArray[i][1]
-            valueArray[i] = valueArray[i][0]
+            endBrackets = checkEnd(valueArray,i)
             max = i
         }
     }
@@ -203,6 +134,14 @@ function calc(start,valueArray){
             max -=2
         }
     }
+    return endBrackets
+}
+function checkEnd(valueArray,i){
+    valueArray[i] = valueArray[i].replace(')', ',')
+    valueArray[i]= valueArray[i].split(",")
+    //we will add extra end brackets after doing the calculations for this function run
+    endBrackets = valueArray[i][1]
+    valueArray[i] = valueArray[i][0]
     return endBrackets
 }
 //window changing scaling, find y value of x
